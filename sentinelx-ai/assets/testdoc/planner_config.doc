@@ -1,0 +1,30 @@
+mode: planner
+
+# --- SYSTEM SETTINGS ---
+system_name: Developer Planning Assistant
+analysis_mode: algorithmic
+logging: enabled
+
+# --- INPUT HANDLING ---
+input_type: code
+supported_languages: python, java, cpp
+enable_auto_detection: true
+
+# --- AI ANALYSIS FEATURES ---
+enable_code_explanation: true
+enable_complexity_analysis: true
+enable_step_breakdown: true
+
+# --- RESPONSE SETTINGS ---
+response_style: structured
+detail_level: high
+include_examples: true
+
+# --- OUTPUT OPTIONS ---
+generate_sample_code: true
+generate_pseudocode: true
+highlight_key_steps: true
+
+# --- PERFORMANCE ---
+max_processing_time: 2
+simulate_delay: true

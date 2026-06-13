@@ -1,0 +1,17 @@
+# UI
+streamlit
+
+# Computer Vision (for video + overlays)
+opencv-python
+numpy
+
+# HTTP (for LLaMA via Ollama)
+requests
+
+# Config parsing
+python-docx
+
+# Optional logging (lightweight)
+loguru
+
+mediapipe 

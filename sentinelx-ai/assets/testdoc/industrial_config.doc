@@ -1,0 +1,33 @@
+mode: industrial
+
+# --- SYSTEM SETTINGS ---
+system_name: Factory Monitoring Unit A
+fps_target: 15
+logging: enabled
+
+# --- ZONE CONFIGURATION ---
+zone_safe: left
+zone_machine: center
+zone_danger: right
+
+# --- THRESHOLDS ---
+temperature_threshold: 78
+vibration_threshold: 22
+human_presence_time_warning: 3
+human_presence_time_critical: 7
+
+# --- ALERT SETTINGS ---
+alerts: enabled
+alert_level_warning: true
+alert_level_critical: true
+
+# --- SENSOR SIMULATION ---
+simulate_temperature: true
+simulate_vibration: true
+temperature_base: 70
+vibration_base: 15
+
+# --- AI BEHAVIOR ---
+risk_model: industrial_v2
+enable_zone_tracking: true
+enable_time_based_risk: true

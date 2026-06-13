@@ -1,0 +1,31 @@
+mode: health
+
+# --- SYSTEM SETTINGS ---
+system_name: Health Observation System
+observation_mode: passive
+fps_target: 10
+logging: disabled
+
+# --- METRIC THRESHOLDS ---
+fatigue_threshold: 0.6
+low_activity_threshold: 45
+attention_threshold: 60
+posture_threshold: 70
+
+# --- AI FEATURES ---
+enable_fatigue_detection: true
+enable_attention_tracking: true
+enable_movement_analysis: true
+
+# --- SIMULATION SETTINGS ---
+simulate_activity: true
+simulate_attention: true
+simulate_posture: true
+
+# --- INSIGHT SETTINGS ---
+insight_level: moderate
+enable_real_time_feedback: true
+
+# --- PRIVACY ---
+privacy_blur: true
+data_retention: session_only
