@@ -1,4 +1,8 @@
 import streamlit as st
+import warnings
+
+# 🤫 SILENCE DEPRECATION LOGS
+warnings.filterwarnings("ignore", message="Please replace `st.components.v1.html` with `st.iframe`.")
 
 # Screens
 from ui.screens.config_screen import config_screen
@@ -43,9 +47,25 @@ for vm in viewmodels.values():
     if hasattr(vm, "load_config"):
         vm.load_config(app_state.config)
 
+# 🔥 SHADOW MONITORING (GATHER DATA IN THE DARK)
+if app_state.mode == "health":
+    from data.vision.health_camera_engine import HealthCameraEngine
+    try:
+        frame, signals = HealthCameraEngine.get_frame()
+        if frame is not None:
+            viewmodels["health"].on_frame_update(frame, signals)
+    except:
+        pass
+
 # 🔥 ROUTING
 page_map = {"Config": "⚙️ Config", "Monitor": "📊 Monitor", "Robot": "🤖 Robot"}
 page = page_map[st.session_state.page]
+
+# ── ROBOT LIFECYCLE MANAGEMENT ──
+if page != "🤖 Robot":
+    st.session_state.robot_initialized = False
+    from robot.stt_engine import stt_engine
+    stt_engine.stop()
 
 if page == "⚙️ Config":
     config_screen(app_state)
