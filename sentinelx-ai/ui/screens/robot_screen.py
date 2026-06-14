@@ -653,7 +653,7 @@ def _render_input_panel(mode: str) -> tuple[str, bool]:
         submitted = st.button(
             "EXECUTE ⚡",
             disabled=(not mode or not (user_input or "").strip()),
-            use_container_width=True,
+            width="stretch",
             key="robot_send",
         )
     return (user_input or "").strip(), submitted
