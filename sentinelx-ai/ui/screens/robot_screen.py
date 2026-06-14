@@ -3,7 +3,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from domain.usecases.generate_response import generate_response
 from robot.tts_engine import tts_engine
-from robot.stt_engine import stt_engine
+from robot.gemini_audio_engine import record_audio, transcribe_audio
 
 _MODE_PROMPTS = {
     "industrial": "e.g. 'Explain the current zone alert' or 'What does vibration spike mean?'",
@@ -152,7 +152,7 @@ body {{
         <div class="eye-grid" id="eyeGrid"></div>
         <div class="eye-pupil" id="eyePupil"></div>
     </div>
-    <div class="jaw" id="jaw">
+    <div class="jaw {'speaking' if is_thinking else ''}" id="jaw">
         <div class="vent"></div><div class="vent"></div><div class="vent"></div><div class="vent"></div>
     </div>
   </div>
@@ -234,12 +234,12 @@ def _mic_button_html(accent: str, is_listening: bool, is_speaking: bool) -> str:
     elif is_listening:
         mic_color = "#39ff14"
         mic_glow  = "0 0 18px #39ff14aa, 0 0 40px #39ff1455"
-        mic_label = "LISTENING"
+        mic_label = "RECORDING"
         ring_anim = "ring-pulse-green"
     else:
         mic_color = "#484f58"
         mic_glow  = "none"
-        mic_label = "TAP TO SPEAK"
+        mic_label = "READY"
         ring_anim = "none"
 
     rgb = ','.join(str(int(accent[i:i+2], 16)) for i in (1, 3, 5))
@@ -262,16 +262,12 @@ def _mic_button_html(accent: str, is_listening: bool, is_speaking: bool) -> str:
     background: #0d1117;
     border: 2px solid {mic_color};
     box-shadow: {mic_glow};
-    cursor: pointer;
+    cursor: default;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
     outline: none;
-}}
-.mic-btn:hover {{
-    transform: scale(1.08);
-    box-shadow: 0 0 28px {mic_color}bb, 0 0 60px {mic_color}44;
 }}
 .mic-ring {{
     position: absolute;
@@ -305,7 +301,7 @@ def _mic_button_html(accent: str, is_listening: bool, is_speaking: bool) -> str:
 </style>
 
 <div class="mic-wrap">
-  <button class="mic-btn" id="micBtn" onclick="window.parent.postMessage({{type:'streamlit:setComponentValue',value:'toggle_mic'}}, '*')">
+  <div class="mic-btn">
     <div class="mic-ring"></div>
     <svg width="28" height="28" viewBox="0 0 24 24">
       <rect class="mic-icon" x="9" y="2" width="6" height="12" rx="3"/>
@@ -313,36 +309,8 @@ def _mic_button_html(accent: str, is_listening: bool, is_speaking: bool) -> str:
       <line class="mic-icon" x1="12" y1="18" x2="12" y2="22" stroke="{mic_color}" stroke-width="2" stroke-linecap="round"/>
       <line class="mic-icon" x1="9"  y1="22" x2="15" y2="22" stroke="{mic_color}" stroke-width="2" stroke-linecap="round"/>
     </svg>
-  </button>
+  </div>
   <span class="mic-label">{mic_label}</span>
-</div>
-"""
-
-
-def _chat_box_html(accent: str, placeholder: str) -> str:
-    """A styled chat input box rendered as HTML for visual purposes only (Streamlit input is below)."""
-    rgb = ','.join(str(int(accent[i:i+2], 16)) for i in (1, 3, 5))
-    return f"""
-<style>
-.chat-outer {{
-    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-    border: 1px solid rgba({rgb}, 0.25);
-    border-radius: 14px;
-    padding: 1px;
-    margin: 6px 0 4px;
-    box-shadow: 0 0 20px rgba({rgb}, 0.06), inset 0 1px 0 rgba(255,255,255,0.03);
-}}
-.chat-label {{
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: rgba({rgb}, 0.7);
-    padding: 8px 14px 0;
-    font-family: 'Segoe UI', monospace;
-}}
-</style>
-<div class="chat-outer">
-  <div class="chat-label">◈ MANUAL QUERY INPUT</div>
 </div>
 """
 
@@ -401,13 +369,18 @@ def _process_query(mode: str, query: str, robot_slot, accent: str) -> None:
         components.html(_robot_face_html(mode, is_thinking=True), height=520)
 
     telemetry = _get_telemetry(mode)
-    response  = generate_response(mode, query, telemetry_context=telemetry)
+    history = st.session_state.get("robot_history", [])
+    
+    # Generate intelligent response using Gemini with context
+    response = generate_response(mode, query, telemetry_context=telemetry, history=history)
 
     with robot_slot:
         components.html(_robot_face_html(mode, is_thinking=False), height=520)
 
     _stream_response(response, accent)
     tts_engine.speak(response, mode=mode)
+    
+    # Save to history for contextual continuity
     st.session_state.robot_history.append({"query": query, "response": response})
 
 
@@ -442,51 +415,70 @@ def _render_history() -> None:
             st.markdown(entry["response"])
 
 
-@st.fragment(run_every=0.5)
+@st.fragment(run_every=2)
 def _render_interactive_agent(app_state, accent: str):
     mode       = app_state.mode
     robot_slot = st.empty()
 
-    # ── Voice query consumed from session state ──
+    # ── Handle scheduled voice query ──
     if st.session_state.get("current_voice_query"):
         query = st.session_state.current_voice_query
         st.session_state.current_voice_query = None
         _process_query(mode, query, robot_slot, accent)
-    else:
-        is_thinking = tts_engine.is_speaking
-        with robot_slot:
-            components.html(_robot_face_html(mode, is_thinking=is_thinking), height=520)
+        # st.rerun() # Refresh to update history immediately
+
+    is_recording = st.session_state.get("is_recording", False)
+    is_speaking = tts_engine.is_speaking # Define is_speaking here for wider scope
+
+    @st.fragment(run_every=1)
+    def _face_loop():
+        # Captures `mode` from outer scope
+        # Note: tts_engine.is_speaking is evaluated in the fragment's context
+        # We use the outer scope's `is_speaking` for consistency, but `tts_engine.is_speaking` can also be directly used here.
+        components.html(_robot_face_html(mode, is_thinking=is_speaking), height=520) 
+
+    # Call the nested fragment to render the robot face
+    _face_loop()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Mic button (visual indicator + toggle) ──
-    is_listening = stt_engine._is_listening
-    is_speaking  = tts_engine.is_speaking
-
+    # ── Visual Indicator for Mic ──
     st.markdown(
-        _mic_button_html(accent, is_listening=is_listening, is_speaking=is_speaking),
+        _mic_button_html(accent, is_listening=is_recording, is_speaking=is_speaking),
         unsafe_allow_html=True,
     )
 
-    # Actual clickable Streamlit button beneath the HTML visual for reliability
+    # ── Interactive Controls ──
     col_l, col_c, col_r = st.columns([2, 1, 2])
     with col_c:
-        btn_label = "🔴 STOP" if is_listening else "🎙️ SPEAK"
-        if st.button(btn_label, key="mic_toggle", use_container_width=True):
-            if is_listening:
-                stt_engine.stop()
-            else:
-                def stt_callback(text: str):
-                    st.session_state.current_voice_query = text
-                stt_engine.listen(stt_callback)
+        if st.button("🎤 RECORD (5s)", use_container_width=True, disabled=is_recording or is_speaking):
+            st.session_state.is_recording = True
             st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ── Gemini STT Processing Logic ──
+    if is_recording:
+        audio_path = None
+        with st.spinner("🎤 Recording for 5 seconds... Speak now."):
+            audio_path = record_audio(duration=5)
+            
+        if audio_path:
+            with st.spinner("🧠 Gemini is transcribing..."):
+                transcribed_text = transcribe_audio(audio_path)
+                
+            if transcribed_text and not transcribed_text.startswith("Error"):
+                st.session_state.current_voice_query = transcribed_text
+            else:
+                st.error(f"Transcription failed: {transcribed_text}")
+        else:
+            st.error("Audio recording failed. Check microphone permissions.")
+            
+        st.session_state.is_recording = False
+        st.rerun() # Trigger the query processing
 
-    # ── Chat hint ──
+    st.markdown("<br>", unsafe_allow_html=True)
     _render_context_hint(mode)
 
-    # ── Styled query label ──
+    # ── Manual Text Input ──
     st.markdown(
         f"""<div style="
             background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
@@ -501,7 +493,6 @@ def _render_interactive_agent(app_state, accent: str):
         unsafe_allow_html=True,
     )
 
-    # ── Text area with matching style ──
     user_input = st.text_area(
         label="query",
         placeholder="Enter your directive... (Shift+Enter for new line, Enter to send)",
@@ -511,22 +502,22 @@ def _render_interactive_agent(app_state, accent: str):
         key="robot_input",
     )
 
-    # ── Send button ──
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         submitted = st.button(
             "⚡ EXECUTE",
-            disabled=(not mode or not (user_input or "").strip()),
+            disabled=(not mode or not (user_input or "").strip() or is_recording),
             use_container_width=True,
             key="robot_send",
         )
 
     if submitted and (user_input or "").strip():
         _process_query(mode, user_input.strip(), robot_slot, accent)
+        # st.rerun() # Refresh history
 
     _render_history()
 
-    # ── LIVE SYSTEM LOG (NEW) ──
+    # ── Debug Log ──
     st.markdown("<br>", unsafe_allow_html=True)
     with st.expander("🛠️ LIVE SYSTEM TELEMETRY (DEBUG)", expanded=True):
         debug_logs = st.session_state.get("robot_debug", ["Waiting for system init..."])
@@ -535,7 +526,7 @@ def _render_interactive_agent(app_state, accent: str):
 
 
 def robot_screen(app_state) -> None:
-    # Request microphone permission on load (best-effort; user must still click button)
+    # Request microphone permission on load
     components.html(
         "<script>navigator.mediaDevices.getUserMedia({audio:true}).catch(()=>{});</script>",
         height=0,
@@ -546,6 +537,7 @@ def robot_screen(app_state) -> None:
         ("robot_history", []),
         ("robot_initialized", False),
         ("current_voice_query", None),
+        ("is_recording", False)
     ]:
         if key not in st.session_state:
             st.session_state[key] = default
@@ -555,11 +547,9 @@ def robot_screen(app_state) -> None:
 
     _render_page_header(mode)
 
-    # ── One-time greeting ──
     if not st.session_state.robot_initialized:
         greeting = _GREETINGS.get(mode, _GREETINGS["default"])
         tts_engine.speak(greeting, mode=mode)
         st.session_state.robot_initialized = True
-        # Don't auto-start STT — require explicit mic button press (browser security)
 
     _render_interactive_agent(app_state, accent)

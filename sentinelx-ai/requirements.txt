@@ -1,17 +1,6 @@
-# UI
 streamlit
-
-# Computer Vision (for video + overlays)
-opencv-python
-numpy
-
-# HTTP (for LLaMA via Ollama)
-requests
-
-# Config parsing
+google-generativeai
+python-dotenv
 python-docx
-
-# Optional logging (lightweight)
-loguru
-
-mediapipe 
+sounddevice
+scipy

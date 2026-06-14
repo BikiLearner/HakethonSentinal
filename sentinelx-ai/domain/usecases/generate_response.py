@@ -1,12 +1,13 @@
-import requests
+import google.generativeai as genai
 import json
+from utils.helpers import get_gemini_api_key
 
-def generate_response(mode: str, user_input: str, telemetry_context: dict = None) -> str:
+def generate_response(mode: str, user_input: str, telemetry_context: dict = None, history: list = None) -> str:
     """
-    Calls local Ollama instance (Llama 3) with telemetry context.
+    Calls Google Gemini API with telemetry and conversation history context to generate a response.
     """
     mode = mode.lower()
-    
+
     # 1. Construct System Prompt based on Mode and Data
     if mode == "industrial":
         system_role = (
@@ -19,8 +20,7 @@ def generate_response(mode: str, user_input: str, telemetry_context: dict = None
         system_role = (
             "You are a Clinical Wellness Assistant for SentinelX AI. "
             "You MUST use the provided CURRENT TELEMETRY DATA (e.g. Physical Variance, Kinematic Entropy, status) in your response. "
-            "If telemetry is calibrating, inform the user. "
-            "Speak clinically but empathetically. Provide actionable wellness advice based on the data. "
+            "Directly reference the data to explain the user's current physical state. "
             "Keep responses under 3 sentences for voice clarity."
         )
     else:
@@ -31,14 +31,23 @@ def generate_response(mode: str, user_input: str, telemetry_context: dict = None
     if telemetry_context:
         data_context = f"\nCURRENT TELEMETRY DATA: {json.dumps(telemetry_context)}"
 
+    # 3. Add History Context
+    history_context = ""
+    if history:
+        history_context = "\nCONVERSATION HISTORY:\n"
+        # Keep last 3 turns to maintain recent context without diluting the prompt
+        for entry in history[-3:]:
+            history_context += f"USER: {entry['query']}\nASSISTANT: {entry['response']}\n"
+
     full_prompt = (
-        f"{system_role}\n"
-        f"USER SAYS: {user_input}\n"
+        f"{system_role}\n\n"
         f"{data_context}\n"
-        f"ASSISTANT RESPONSE:"
+        f"{history_context}\n"
+        f"CURRENT USER SAYS: \"{user_input}\"\n\n"
+        f"ASSISTANT RESPONSE (must be 3 sentences or less):"
     )
 
-    # 3. Call Ollama
+    # 4. Call Gemini API
     def _add_log(message):
         import streamlit as st
         from datetime import datetime
@@ -49,27 +58,23 @@ def generate_response(mode: str, user_input: str, telemetry_context: dict = None
         st.session_state.robot_debug = st.session_state.robot_debug[-10:]
 
     try:
-        _add_log(f"Querying A.I. Core (Mode: {mode})...")
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llama3",
-                "prompt": full_prompt,
-                "stream": False,
-                "options": {
-                    "temperature": 0.7,
-                    "num_predict": 100
-                }
-            },
-            timeout=15
-        )
+        _add_log(f"Querying Gemini 2.5 Flash (Mode: {mode})...")
+
+        api_key = get_gemini_api_key()
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not found in .env file.")
         
-        if response.status_code == 200:
-            return response.json().get("response", "I am processing the data.")
-        else:
-            _add_log("A.I. Core returned error status")
-            return "A.I. Core connection error. Status: Offline."
+        genai.configure(api_key=api_key)
+        # Using the requested modern model
+        model = genai.GenerativeModel('gemini-2.5-flash')
+
+        response = model.generate_content(full_prompt)
+
+        _add_log("Gemini response received.")
+        return response.text.strip()
 
     except Exception as e:
-        _add_log(f"A.I. Core connection failed: {e}")
-        return "I am currently unable to reach my advanced logic core. Please stand by."
+        error_message = f"Error calling Gemini API: {e}"
+        _add_log(error_message)
+        print(error_message)
+        return "I'm sorry, I'm having trouble connecting to my AI core right now."

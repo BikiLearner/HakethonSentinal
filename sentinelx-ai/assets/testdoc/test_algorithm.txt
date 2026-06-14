@@ -1,0 +1,55 @@
+# Quicksort Algorithm Implementation in Python
+
+def partition(array, low, high):
+  """
+  This function takes last element as pivot, places the pivot element at its
+  correct position in sorted array, and places all smaller (smaller than pivot)
+  to left of pivot and all greater elements to right of pivot.
+  """
+  # Choose the rightmost element as pivot
+  pivot = array[high]
+
+  # Pointer for greater element
+  i = low - 1
+
+  # Traverse through all elements
+  # compare each element with pivot
+  for j in range(low, high):
+    if array[j] <= pivot:
+      # If element smaller than pivot is found
+      # swap it with the greater element pointed by i
+      i = i + 1
+      (array[i], array[j]) = (array[j], array[i])
+
+  # Swap the pivot element with the greater element specified by i
+  (array[i + 1], array[high]) = (array[high], array[i + 1])
+
+  # Return the position from where partition is done
+  return i + 1
+
+def quicksort(array, low, high):
+  """
+  The main function to implement Quicksort.
+  
+  array -> Array to be sorted,
+  low  -> Starting index,
+  high  -> Ending index
+  """
+  if low < high:
+    # Find pivot element such that
+    # element smaller than pivot are on the left
+    # element greater than pivot are on the right
+    pi = partition(array, low, high)
+
+    # Recursive call on the left of pivot
+    quicksort(array, low, pi - 1)
+
+    # Recursive call on the right of pivot
+    quicksort(array, pi + 1, high)
+
+# Example Usage:
+# data = [8, 7, 2, 1, 0, 9, 6]
+# size = len(data)
+# quicksort(data, 0, size - 1)
+# print("Sorted Array in Ascending Order:")
+# print(data)
