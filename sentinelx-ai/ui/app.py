@@ -1,6 +1,6 @@
 import streamlit as st
 import warnings
-
+from data.vision.health_camera_engine import HealthCameraEngine
 # 🤫 SILENCE DEPRECATION LOGS
 warnings.filterwarnings("ignore", message="Please replace `st.components.v1.html` with `st.iframe`.")
 
@@ -13,13 +13,14 @@ from ui.screens.robot_screen import robot_screen
 from viewmodel.planner_vm import PlannerViewModel
 from viewmodel.industrial_vm import make_industrial_view_model
 from viewmodel.health_vm import make_health_view_model
+import logging
 
 # Core
 from core.app_state import AppState
 
 # Navigation
 from ui.nav import render_nav
-
+logging.getLogger("streamlit").setLevel(logging.ERROR)
 
 st.set_page_config(layout="wide")
 
@@ -47,15 +48,18 @@ for vm in viewmodels.values():
     if hasattr(vm, "load_config"):
         vm.load_config(app_state.config)
 
-# 🔥 SHADOW MONITORING (GATHER DATA IN THE DARK)
-if app_state.mode == "health":
-    from data.vision.health_camera_engine import HealthCameraEngine
-    try:
-        frame, signals = HealthCameraEngine.get_frame()
-        if frame is not None:
-            viewmodels["health"].on_frame_update(frame, signals)
-    except:
-        pass
+
+HealthCameraEngine.init()
+
+# # 🔥 SHADOW MONITORING (GATHER DATA IN THE DARK)
+# if app_state.mode == "health":
+#     from data.vision.health_camera_engine import HealthCameraEngine
+#     try:
+#         frame, signals = HealthCameraEngine.get_frame()
+#         if frame is not None:
+#             viewmodels["health"].on_frame_update(frame, signals)
+#     except:
+#         pass
 
 # 🔥 ROUTING
 page_map = {"Config": "⚙️ Config", "Monitor": "📊 Monitor", "Robot": "🤖 Robot"}

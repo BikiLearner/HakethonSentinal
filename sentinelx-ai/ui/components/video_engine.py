@@ -7,25 +7,31 @@ class VideoEngine:
 
     @staticmethod
     def get_frame(video_path="assets/videos/13814831_3840_2160_100fps.mp4"):
-
-        if "cap" not in st.session_state:
+        if "cap" not in st.session_state or not st.session_state.cap.isOpened():
             st.session_state.cap = cv2.VideoCapture(video_path)
-
-        if "start_time" not in st.session_state:
             st.session_state.start_time = time.time()
 
         cap = st.session_state.cap
         ret, frame = cap.read()
 
+        # Loop the video when it ends
         if not ret:
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             ret, frame = cap.read()
 
+        # GUARD: never resize a None frame (this is what silently kills the feed)
+        if not ret or frame is None:
+            frame = np.zeros((360, 640, 3), dtype=np.uint8)
+            cv2.putText(frame, "NO SIGNAL — CHECK VIDEO PATH", (60, 180),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (30, 30, 255), 2)
+            elapsed = int(time.time() - st.session_state.start_time)
+            return frame, "critical", elapsed
+
         frame = cv2.resize(frame, (640, 360))
         elapsed = int(time.time() - st.session_state.start_time)
-
         frame, event = VideoEngine._process(frame, elapsed)
         return frame, event, elapsed
+
 
     @staticmethod
     def _process(frame, elapsed):
@@ -115,9 +121,9 @@ class VideoEngine:
                     (10, h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.46, status_color, 1)
 
         # ── Scan-line effect (subtle horizontal lines) ───────────────────────
-        for y in range(0, h, 6):
-            cv2.line(frame, (0, y), (w, y), (0, 0, 0), 1)
-            if y % 12 == 0:
-                pass  # keep every other scanline fully dark for CRT feel
+        scan = frame.copy()
+        for y in range(0, h, 4):
+            cv2.line(scan, (0, y), (w, y), (0, 0, 0), 1)
+        frame = cv2.addWeighted(scan, 0.15, frame, 0.85, 0)
 
         return frame, event

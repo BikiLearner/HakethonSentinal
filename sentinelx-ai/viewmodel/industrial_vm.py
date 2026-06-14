@@ -4,6 +4,10 @@ from typing import Any
 import numpy as np
 import random
 from domain.usecases.industrial_explainer import explain_event
+import streamlit as st
+
+
+
 
 @dataclass
 class IndustrialViewModel:
@@ -43,50 +47,67 @@ class IndustrialViewModel:
         """
         self.current_config.update(config_data)
 
-    def on_frame_update(self, frame, event=None,elapsed=0) -> None:
-
-        # 🔥 Simulated telemetry
-        temp = 70 + (elapsed * 1.5) + random.random()*2
-        vibration = 15 + (elapsed * 0.8) + random.random()*2
+    def on_frame_update(self, frame, event=None, elapsed=0) -> None:
+        if "industrial_ai_called" not in st.session_state:
+            st.session_state.industrial_ai_called = False
+        # 🔥 Simulated industrial telemetry (more realistic)
+        temp = 65 + (elapsed * 0.8) + random.random() * 1.5
+        vibration = 12 + (elapsed * 0.5) + random.random() * 1.2
+        load = 40 + (elapsed * 1.2) + random.random() * 3
 
         self.telemetry_data["temperature"] = temp
         self.telemetry_data["vibration"] = vibration
+        self.telemetry_data["load"] = load
 
-        # 🔥 Base status
-        self.telemetry_data["status"] = "SAFE"
+        # 🔥 Default state
+        self.telemetry_data["status"] = "NORMAL"
         self.alert_message = None
 
-        # 🔥 If no event → normal
         if not event:
             return
 
-        # 🔥 Map event → system state
-        if event == "person_detected":
+        # 🔥 Industrial event mapping
+        if event == "vibration_anomaly":
             self.telemetry_data["status"] = "WARNING"
 
-        elif event == "high_temperature":
+        elif event == "thermal_spike":
             self.telemetry_data["status"] = "WARNING"
 
-        elif event == "critical":
+        elif event == "joint_overload":
+            self.telemetry_data["status"] = "WARNING"
+
+        elif event == "critical_failure":
             self.telemetry_data["status"] = "CRITICAL"
 
-        # 🔥 🧠 REAL AI CALL (THIS IS THE CORE)
+        # 🔥 🧠 AI explanation
         try:
-            ai_response = explain_event(
-                event=event,
-                temperature=temp,
-                vibration=vibration
-            )
-            self.alert_message = ai_response
+            if not st.session_state.industrial_ai_called:
+                ai_response = explain_event(
+                    event=event,
+                    temperature=temp,
+                    vibration=vibration,
+                    load=load
+                )
+                st.session_state.industrial_ai_response = ai_response
 
-        except Exception as e:
-            # 🔥 Fallback (never break demo)
-            if event == "person_detected":
-                self.alert_message = "⚠️ Human detected in restricted zone"
-            elif event == "high_temperature":
-                self.alert_message = "⚠️ Rising thermal levels detected"
-            elif event == "critical":
-                self.alert_message = "🔴 CRITICAL: Unsafe human-machine interaction"
+                self.alert_message = ai_response
+                st.session_state.industrial_ai_called = True
+            else:
+             self.alert_message = st.session_state.get("industrial_ai_response", self.alert_message)
+
+        except Exception:
+            # 🔥 fallback (industrial tone)
+            if event == "vibration_anomaly":
+                self.alert_message = "⚠️ Abnormal vibration detected in actuator assembly"
+
+            elif event == "thermal_spike":
+                self.alert_message = "⚠️ Rapid temperature increase in motor unit"
+
+            elif event == "joint_overload":
+                self.alert_message = "⚠️ Excess load detected on robotic joint"
+
+            elif event == "critical_failure":
+                self.alert_message = "🔴 CRITICAL: Mechanical instability detected"
 
 def make_industrial_view_model(
     frame_processor=None,
