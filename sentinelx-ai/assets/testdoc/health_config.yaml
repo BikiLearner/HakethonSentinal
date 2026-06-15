@@ -1,0 +1,168 @@
+mode: health
+
+# ═══════════════════════════════════════════════════════════════
+# 🧠 SENTINEL X — HEALTH MONITORING CONFIGURATION (v4.3)
+# ═══════════════════════════════════════════════════════════════
+
+system:
+  name: SentinelX Cognitive & Physiological Monitoring System
+  version: 4.3
+  observation_mode: passive
+  deployment_environment: edge_device
+  runtime_profile: adaptive_low_latency
+  fps_target: 10
+  logging: disabled
+  system_state: operational
+  monitoring_scope: real_time_behavioral_analysis
+  description: >
+    Continuous, non-intrusive monitoring of cognitive and physical state
+    using vision-based signals and inference models. Optimized for
+    low-latency edge deployment with strong privacy safeguards.
+
+# ──────────────────────────────────────────────────────────────
+# 📊 THRESHOLDS
+# ──────────────────────────────────────────────────────────────
+
+thresholds:
+  fatigue_index:
+    warning: 0.6
+    critical: 0.8
+    interpretation: >
+      Based on blink rate, eye closure, and head stability. Higher values
+      indicate fatigue or drowsiness.
+  activity_level:
+    low: 45
+    optimal_range: [60, 85]
+    interpretation: >
+      Movement intensity over time. Low = inactivity, high = restlessness.
+  attention_score:
+    minimum: 60
+    optimal: 75
+    interpretation: >
+      Derived from gaze and head orientation. Low values indicate distraction.
+  posture_stability:
+    minimum: 70
+    optimal: 85
+    interpretation: >
+      Evaluates body alignment and motion consistency.
+
+# ──────────────────────────────────────────────────────────────
+# 🤖 AI MODULES
+# ──────────────────────────────────────────────────────────────
+
+ai_modules:
+  fatigue_detection:
+    enabled: true
+    sensitivity: medium
+    model_version: v2.3
+    input_signals:
+      - eye_aspect_ratio
+      - blink_rate
+      - head_tilt
+    output: fatigue_index
+  attention_tracking:
+    enabled: true
+    tracking_mode: continuous
+    input_signals:
+      - gaze_vector
+      - face_orientation
+    output: attention_score
+  movement_analysis:
+    enabled: true
+    detection_granularity: fine
+    input_signals:
+      - pose_keypoints
+      - motion_vectors
+    output: activity_level
+  posture_analysis:
+    enabled: true
+    input_signals:
+      - spine_alignment
+      - shoulder_balance
+    output: posture_stability
+
+# ──────────────────────────────────────────────────────────────
+# 🧪 SIMULATION
+# ──────────────────────────────────────────────────────────────
+
+simulation:
+  enabled: true
+  profile: human_behavior_simulation_v1
+  dynamics:
+    activity_pattern: dynamic
+    attention_variance: realistic
+    posture_variation: moderate
+    fatigue_progression: gradual
+  noise_model:
+    enabled: true
+    type: gaussian
+    level: low
+
+# ──────────────────────────────────────────────────────────────
+# 💡 INSIGHTS ENGINE
+# ──────────────────────────────────────────────────────────────
+
+insights:
+  level: moderate
+  real_time_feedback: true
+  feedback_frequency_sec: 5
+  explainability: enabled
+  explanation_mode: contextual_reasoning
+  summary_mode: adaptive
+  generate_alert_context: true
+
+# ──────────────────────────────────────────────────────────────
+# 🔐 PRIVACY
+# ──────────────────────────────────────────────────────────────
+
+privacy:
+  blur_faces: true
+  anonymize_data: true
+  biometric_storage: disabled
+  data_retention: session_only
+  encryption: enabled
+  compliance:
+    gdpr: true
+    hipaa: partial
+  audit_logging: disabled
+
+# ──────────────────────────────────────────────────────────────
+# ⚙️ BEHAVIOR
+# ──────────────────────────────────────────────────────────────
+
+behavior:
+  auto_alerting: true
+  adaptive_thresholding: true
+  anomaly_cooldown_sec: 10
+  escalation_policy:
+    warning: notify
+    critical: immediate_alert
+  fallback_mode: safe_operation
+  recovery_strategy: gradual_normalization
+
+# ──────────────────────────────────────────────────────────────
+# 📈 DIAGNOSTICS
+# ──────────────────────────────────────────────────────────────
+
+diagnostics:
+  enable_metrics_logging: false
+  monitor_latency: true
+  max_processing_time_ms: 120
+  average_target_latency_ms: 80
+  frame_drop_tolerance: low
+  health_check_interval_sec: 30
+
+# ──────────────────────────────────────────────────────────────
+# 🧠 META CONTEXT
+# ──────────────────────────────────────────────────────────────
+
+meta:
+  system_intent: >
+    Detect early signs of fatigue, disengagement, and discomfort
+    through continuous behavioral monitoring.
+  inference_strategy: >
+    Multi-signal fusion with temporal smoothing for stable output.
+  risk_model: >
+    Based on deviation + duration, not single-frame anomalies.
+  explainability_goal: >
+    All outputs must map directly to observable signals.

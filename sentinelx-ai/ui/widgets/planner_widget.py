@@ -157,7 +157,7 @@ def planner_widget(view_model):
         ">
             <div style="font-size:2rem;margin-bottom:0.75rem;">🤖</div>
             <div style="color:{_ACCENT};font-size:0.75rem;font-weight:700;
-                letter-spacing:0.25em;">GEMINI ANALYZING FILE...</div>
+                letter-spacing:0.25em;">MODEL ANALYZING FILE...</div>
             <div style="color:#484f58;font-size:0.68rem;letter-spacing:0.1em;
                 margin-top:0.4rem;">PLEASE STAND BY</div>
         </div>

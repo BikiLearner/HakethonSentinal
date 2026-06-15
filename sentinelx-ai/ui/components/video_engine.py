@@ -1,6 +1,7 @@
 import cv2
 import time
 import streamlit as st
+import numpy as np
 
 
 class VideoEngine:

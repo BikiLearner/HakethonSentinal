@@ -271,7 +271,7 @@ def _render_config(config: dict) -> None:
     st.json(config, expanded=False)
 
 
-@st.fragment(run_every=0.1)
+@st.fragment(run_every=0.5)
 def health_widget(view_model):
     
     _css()

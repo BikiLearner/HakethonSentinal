@@ -1,0 +1,116 @@
+mode: planner
+
+# ═══════════════════════════════════════════════════════════════
+# 🧠 SENTINEL X — INTELLIGENT PLANNER CONFIGURATION (v4.3)
+# ═══════════════════════════════════════════════════════════════
+
+system:
+  name: SentinelX Developer Planning Assistant
+  version: 4.3
+  analysis_mode: algorithmic_reasoning
+  runtime_profile: low_latency_interactive
+  logging: enabled
+  system_state: active
+  description: >
+    AI-assisted planning system designed to analyze source code,
+    deconstruct algorithms, and generate structured explanations,
+    enabling developers to understand, optimize, and reason about logic.
+
+# ──────────────────────────────────────────────────────────────
+# 📥 INPUT PROCESSING
+# ──────────────────────────────────────────────────────────────
+
+input:
+  type: code
+  auto_detection: true
+  supported_languages:
+    - python
+    - java
+    - cpp
+  preprocessing:
+    remove_comments: false
+    normalize_formatting: true
+    extract_functions: true
+
+# ──────────────────────────────────────────────────────────────
+# 🤖 AI ANALYSIS MODULES
+# ──────────────────────────────────────────────────────────────
+
+ai_modules:
+  code_explanation:
+    enabled: true
+    explanation_depth: detailed
+    strategy: stepwise_reasoning
+  complexity_analysis:
+    enabled: true
+    metrics:
+      - time_complexity
+      - space_complexity
+    estimation_method: heuristic
+  step_decomposition:
+    enabled: true
+    granularity: fine
+    include_logic_flow: true
+  pattern_recognition:
+    enabled: true
+    detect_algorithms: true
+    detect_loops: true
+    detect_conditions: true
+
+# ──────────────────────────────────────────────────────────────
+# 🧾 RESPONSE GENERATION
+# ──────────────────────────────────────────────────────────────
+
+response:
+  style: structured
+  detail_level: high
+  tone: technical_explanatory
+  formatting:
+    use_sections: true
+    highlight_keywords: true
+    include_headers: true
+  examples:
+    include_examples: true
+    example_style: minimal_code
+
+# ──────────────────────────────────────────────────────────────
+# 📤 OUTPUT GENERATION
+# ──────────────────────────────────────────────────────────────
+
+output:
+  generate_sample_code: true
+  generate_pseudocode: true
+  highlight_key_steps: true
+  visualization:
+    flowchart_generation: false
+    step_sequence_diagram: true
+
+# ──────────────────────────────────────────────────────────────
+# ⚙️ PERFORMANCE & EXECUTION CONTROL
+# ──────────────────────────────────────────────────────────────
+
+performance:
+  max_processing_time_sec: 2
+  simulate_delay: true
+  delay_profile: human_like_response
+  optimization:
+    cache_results: false
+    prioritize_fast_response: true
+
+# ──────────────────────────────────────────────────────────────
+# 🧠 META INTELLIGENCE CONTEXT
+# ──────────────────────────────────────────────────────────────
+
+meta:
+  system_goal: >
+    Assist developers in understanding complex code by breaking it into
+    structured, explainable steps and highlighting key logic patterns.
+  reasoning_strategy: >
+    Combine pattern recognition with step-by-step decomposition to produce
+    clear, human-readable explanations of algorithmic behavior.
+  explainability_focus: >
+    Ensure every explanation includes reasoning tied to code structure,
+    not just output description.
+  user_experience_goal: >
+    Deliver fast, concise, and technically accurate insights suitable for
+    both beginners and experienced developers.

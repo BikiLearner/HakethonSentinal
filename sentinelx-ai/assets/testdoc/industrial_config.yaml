@@ -1,0 +1,142 @@
+mode: industrial
+
+# ═══════════════════════════════════════════════════════════════
+# 🏭 SENTINEL X — INDUSTRIAL MONITORING CONFIGURATION (v4.0)
+# ═══════════════════════════════════════════════════════════════
+
+system:
+  name: Factory Monitoring Unit A
+  deployment: edge_device
+  runtime_profile: real_time_low_latency
+  fps_target: 15
+  logging: enabled
+  system_state: active
+  description: >
+    Industrial monitoring system designed to observe robotic operations,
+    detect anomalies in machine behavior, and ensure safe human-machine
+    interaction in real-time production environments.
+
+# ──────────────────────────────────────────────────────────────
+# 🧭 ZONE CONFIGURATION
+# ──────────────────────────────────────────────────────────────
+
+zones:
+  safe_zone:
+    position: left
+    description: Low-risk operational area
+  machine_zone:
+    position: center
+    description: Active robotic operation region
+  danger_zone:
+    position: right
+    description: High-risk zone requiring strict monitoring
+
+# ──────────────────────────────────────────────────────────────
+# 🌡️ SENSOR THRESHOLDS
+# ──────────────────────────────────────────────────────────────
+
+thresholds:
+  temperature:
+    warning: 78
+    critical: 90
+    unit: celsius
+    interpretation: >
+      Elevated temperature may indicate motor stress or overheating.
+  vibration:
+    warning: 22
+    critical: 30
+    unit: hz
+    interpretation: >
+      Abnormal vibration suggests imbalance or mechanical wear.
+  human_presence:
+    warning_duration_sec: 3
+    critical_duration_sec: 7
+    interpretation: >
+      Extended human presence in restricted zones increases safety risk.
+
+# ──────────────────────────────────────────────────────────────
+# 🚨 ALERT CONFIGURATION
+# ──────────────────────────────────────────────────────────────
+
+alerts:
+  enabled: true
+  levels:
+    warning:
+      enabled: true
+      action: notify_operator
+    critical:
+      enabled: true
+      action: trigger_emergency_protocol
+  delivery:
+    visual_alerts: true
+    audio_alerts: false
+    logging: enabled
+
+# ──────────────────────────────────────────────────────────────
+# 🧪 SENSOR SIMULATION
+# ──────────────────────────────────────────────────────────────
+
+simulation:
+  enabled: true
+  temperature:
+    base: 70
+    variance: dynamic
+    trend: gradual_increase
+  vibration:
+    base: 15
+    variance: moderate
+    anomaly_pattern: intermittent_spike
+
+# ──────────────────────────────────────────────────────────────
+# 🤖 AI BEHAVIOR CONFIGURATION
+# ──────────────────────────────────────────────────────────────
+
+ai_behavior:
+  risk_model: industrial_v2
+  inference_mode: real_time
+  modules:
+    zone_tracking:
+      enabled: true
+      tracking_method: spatial_mapping
+    time_based_risk:
+      enabled: true
+      accumulation_model: duration_weighted
+    anomaly_detection:
+      enabled: true
+      strategy: threshold_deviation
+
+# ──────────────────────────────────────────────────────────────
+# ⚙️ SYSTEM RESPONSE BEHAVIOR
+# ──────────────────────────────────────────────────────────────
+
+behavior:
+  auto_alerting: true
+  escalation_policy:
+    warning: notify
+    critical: shutdown_sequence
+  cooldown_period_sec: 5
+  fallback_mode: safe_operation
+
+# ──────────────────────────────────────────────────────────────
+# 📈 PERFORMANCE & DIAGNOSTICS
+# ──────────────────────────────────────────────────────────────
+
+diagnostics:
+  enable_metrics_logging: true
+  monitor_latency: true
+  max_processing_time_ms: 100
+  health_check_interval_sec: 20
+
+# ──────────────────────────────────────────────────────────────
+# 🧠 META CONTEXT
+# ──────────────────────────────────────────────────────────────
+
+meta:
+  system_goal: >
+    Ensure continuous monitoring of industrial processes while minimizing
+    safety risks and maintaining operational efficiency.
+  risk_strategy: >
+    Combine spatial awareness with temporal analysis to detect unsafe
+    conditions before escalation.
+  explainability: >
+    Alerts should include reasoning based on sensor anomalies and zone violations.

@@ -19,7 +19,7 @@ _MODE_COLOURS = {
 
 _GREETINGS = {
     "industrial": "Hi, I am here to tell you about the status and about the machine. You can ask me anything.",
-    "health": "Hi, I am here to assist with your physiological telemetry. Tell me about your health.",
+    "health": "Hi, I'm here to monitor your health. Let me analyze your data and walk you through what I find.",
     "planner": "A.I. Core online. I am ready to assist with project planning and strategy.",
     "default": "System online. Advanced logic core active."
 }
@@ -360,6 +360,9 @@ def _get_telemetry(mode: str) -> dict:
         return viewmodels["health"].report_data
     if mode == "industrial" and "industrial" in viewmodels:
         return viewmodels["industrial"].telemetry_data
+    if mode == "planner" and "planner" in viewmodels:
+        # Return the structured analysis from the planner viewmodel
+        return viewmodels["planner"].output_content
     return {}
 
 
@@ -462,7 +465,7 @@ def _render_interactive_agent(app_state, accent: str):
             audio_path = record_audio(duration=5)
             
         if audio_path:
-            with st.spinner("🧠 Gemini is transcribing..."):
+            with st.spinner("🧠 Thinking..."):
                 transcribed_text = transcribe_audio(audio_path)
                 
             if transcribed_text and not transcribed_text.startswith("Error"):
