@@ -120,3 +120,7 @@ ehthumbs_vista.db
 # Temp files
 *.tmp
 *~
+
+# Generated media
+# Ignore temporary audio files from the TTS engine
+assets/audio/*.mp3
